@@ -13,7 +13,7 @@ import useAuth from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 
 export default function TournamentsPage() {
-  const { user } = useAuth()
+  const { user, socket } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
   const [tournaments, setTournaments] = useState<ITournament[]>([])
@@ -47,6 +47,7 @@ export default function TournamentsPage() {
 
   const onJoinHandler = async (id: string) => {
     try {
+      setDeleteLoad(id)
       const { data } = await axiosClient.put<{ updateTourner: ITournament }>(`/api/tournament/join/${id}`)      
       setTournaments(prev =>
         prev.map(item => {
@@ -58,9 +59,12 @@ export default function TournamentsPage() {
           }
           return item;
         })
-      );      
+      )
+      socket?.emit("addNewParticipant", { tournament: data.updateTourner})
     } catch (error) {
       console.log(error);
+    } finally {
+      setDeleteLoad("")
     }
   }
 
@@ -74,10 +78,18 @@ export default function TournamentsPage() {
       console.log(error);
     }
   }
-
+  
   useEffect(() => {
     getTournaments()
   },[])
+
+  useEffect(() => {
+    socket?.on("getTournament", ({ tournament }: { tournament: ITournament }) => {
+      setTournaments(prev =>
+        prev.map(t => (t._id === tournament._id ? tournament : t))
+      );
+    })
+  },[socket, user])
 
 
   const filteredTournaments = tournaments.filter((t) => {
@@ -118,10 +130,10 @@ export default function TournamentsPage() {
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit mb-3"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            Uyga qaytish!
           </Link>
             <Button asChild>
-              <Link href="/tournaments/create">Create Tournament</Link>
+              <Link href="/tournaments/create">Turnir yaratish!</Link>
             </Button>
           </div>
         </div>
@@ -134,7 +146,7 @@ export default function TournamentsPage() {
             <div className="flex-1 relative">
               <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
               <Input
-                placeholder="Search tournaments or organizers..."
+                placeholder="Turnirlarni qidirish..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -143,7 +155,7 @@ export default function TournamentsPage() {
             <div className="flex gap-2">
               <Button variant={sortBy === "date" ? "default" : "outline"} onClick={() => setSortBy("date")} size="sm">
                 <ArrowUpDown className="w-4 h-4 mr-2" />
-                Latest
+                Oxirgilar
               </Button>
               <Button
                 variant={sortBy === "participants" ? "default" : "outline"}
@@ -151,7 +163,7 @@ export default function TournamentsPage() {
                 size="sm"
               >
                 <ArrowUpDown className="w-4 h-4 mr-2" />
-                Popular
+                Ommaviy
               </Button>
             </div>
           </div>
@@ -194,7 +206,7 @@ export default function TournamentsPage() {
                         </span>
                       </div>
 
-                      <p className="text-sm text-gray-500 mb-4">by {tournament.creator.email}</p>
+                      <p className="text-sm text-gray-500 mb-4">tomonidan {tournament.creator.email}</p>
                       <div className="flex items-center gap-2 flex-wrap mb-4">
                         <Button
                           variant="outline"
@@ -257,19 +269,19 @@ export default function TournamentsPage() {
 
                       <div className="grid grid-cols-3 gap-6 text-sm">
                         <div>
-                          <p className="text-gray-400 text-xs mb-1">Participants</p>
+                          <p className="text-gray-400 text-xs mb-1">Ishtirokchilar</p>
                           <p className="font-semibold text-gray-900">
                             {tournament.players.length}/16
                           </p>
                         </div>
                         <div>
-                          <p className="text-gray-400 text-xs mb-1">Start Date</p>
+                          <p className="text-gray-400 text-xs mb-1">Boshlanish vaqti</p>
                           <p className="font-semibold text-gray-900">
                             {format(new Date(tournament.time), "P hh:mm")}
                           </p>
                         </div>
                         <div>
-                          <p className="text-gray-400 text-xs mb-1">Progress</p>
+                          <p className="text-gray-400 text-xs mb-1">Jarayon</p>
                           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                             <div
                               className="bg-gradient-to-r from-green-400 to-green-600 h-full transition-all"

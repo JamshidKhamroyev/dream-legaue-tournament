@@ -17,7 +17,7 @@ interface TournamentBracketProps {
 
 export function TournamentBracket({
   matches,
-  title = "Tournament Bracket",
+  title = "Turnir setkasi!",
   setSelect,
   creator
 }: TournamentBracketProps) {
@@ -59,7 +59,7 @@ export function TournamentBracket({
 
   return (
     <div className="space-y-4 w-full">
-      <h2 className="text-xl font-bold text-foreground">{title}</h2>
+      <h2 className="text-xl font-bold text-foreground">{user?._id === creator ? "Mening turnirim!" :  "Turnir!"}</h2>
 
       <div className="overflow-x-auto pb-6">
         <div className="flex gap-16 min-w-min p-6 bg-muted/20 rounded-lg transition-all">
@@ -94,7 +94,7 @@ export function TournamentBracket({
               )
             })
           ) : (
-            [1,2,3].map((_, i) => <BracketSkeleton key={i} />)
+            <p>O'yinlar mavjud emas!</p>
           )}
         </div>
       </div>

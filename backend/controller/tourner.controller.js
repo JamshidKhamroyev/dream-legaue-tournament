@@ -34,6 +34,7 @@ const deleteTourner = async (req, res) => {
             return res.status(400).json({ message: "Tournament cannot delete!"})
         }
 
+        await Match.deleteMany({ tournamet: tourner._id })
         res.status(201).json({ tourner })
     } catch (error) {
         res.status(500).json(error)
@@ -47,7 +48,12 @@ const joinUser = async (req, res) => {
             return res.status(400).json({ message: "Tournamnet not found!"})
         }
         await connectToDatabase()
-        const updateTourner = await Tournament.findByIdAndUpdate(id, { $push: { players: req.userId }}, { new: true })
+        
+        const checked = await Tournament.findById(id)
+        if(checked.players.find(p => p.toString() === req.userId.toString())){
+            return res.status(400).json({ message: "Siz allaqachon qo'shilgansiz!" })
+        }
+        const updateTourner = await Tournament.findByIdAndUpdate(id, { $push: { players: req.userId }}, { new: true }).populate("creator").populate("players", "_id email")
         res.status(200).json({ updateTourner })
     } catch (error) {
         res.status(500).json(error)
@@ -160,7 +166,7 @@ const getTournament = async (req, res) => {
             { path: "winner", select: "email _id" }
         ])
 
-        const tournament = await Tournament.findById(id).select("status _id createdAt creator location time title players").populate("players")
+        const tournament = await Tournament.findById(id).select("status _id createdAt creator location time title players").populate("players", "_id email")
         res.status(200).json({ matches, tournament })
     } catch (error) {
         res.status(500).json(error)

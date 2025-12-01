@@ -78,23 +78,23 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Trophy className="w-8 h-8 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">Tournament Manager</h1>
+              <h1 className="text-2xl font-bold text-foreground">Turnirlar yarating!</h1>
             </div>
             <nav className="flex items-center gap-2">
               <Button variant="outline" asChild>
-                <Link href="/tournaments">View All</Link>
+                <Link href="/tournaments">Hammmasini ko'rish!</Link>
               </Button>
               <Button asChild>
                 <Link href="/tournaments/create">
                   <Plus className="w-4 h-4 mr-2" />
-                  New Tournament
+                  Yangi turnir
                 </Link>
               </Button>
 
                 <Button asChild className="bg-red-800 hover:bg-red-950 cursor-pointer" onClick={logoutHandler}>
                   <div>
                     <LogOut className="w-4 h-4 mr-2" />
-                    Logout
+                    Chiqish
                   </div>
               </Button>
             </nav>
@@ -105,29 +105,29 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-12">
           <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border border-border p-8">
-            <h2 className="text-3xl font-bold text-foreground mb-2">Welcome to Tournament Manager</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-2">Tournament Managerga xush kelibsiz</h2>
             <p className="text-muted-foreground mb-6">
-              Create, manage, and track competitive tournaments with real-time bracket visualization and leaderboards.
+              Real vaqt rejimida braket vizualizatsiyasi va peshqadamlar jadvali yordamida raqobatbardosh turnirlarni yarating, boshqaring va kuzatib boring.
             </p>
             <div className="grid grid-cols-3 gap-4">
               <div className="flex items-center gap-3">
                 <Users className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Participants</p>
+                  <p className="text-sm text-muted-foreground">Barcha foydalanuvchilar</p>
                   <p className="text-2xl font-bold text-foreground">{stat?.users || 0}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Trophy className="w-5 h-5 text-accent" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Tournaments</p>
+                  <p className="text-sm text-muted-foreground">Faol turnirlar</p>
                   <p className="text-2xl font-bold text-foreground">{stat?.active || 0}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Zap className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Matches</p>
+                  <p className="text-sm text-muted-foreground">Barcha o'yinlar</p>
                   <p className="text-2xl font-bold text-foreground">{stat?.matches || 0}</p>
                 </div>
               </div>
@@ -136,7 +136,7 @@ export default function Dashboard() {
         </div>
 
         <div className="mb-12">
-          <h2 className="text-xl font-bold text-foreground mb-6">Your Tournaments</h2>
+          <h2 className="text-xl font-bold text-foreground mb-6">Sizning turnirlaringiz!</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tournaments.length > 0 ? tournaments.map((tournament) => (
               <Link key={tournament._id} href={`/tournaments/${tournament._id}`}>
@@ -153,12 +153,12 @@ export default function Dashboard() {
 
                     <div className="space-y-4">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Participants</span>
+                        <span className="text-muted-foreground">Ishtirokchilar</span>
                         <span className="font-semibold text-foreground">{tournament.players.length}</span>
                       </div>
 
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Total match</span>
+                        <span className="text-muted-foreground">Barcha o'yinlar</span>
                         <span className="font-semibold text-foreground">{tournament.matchs.length}</span>
                       </div>
                       <Button className="w-full mt-4 bg-transparent" variant="outline" size="sm">
@@ -170,7 +170,7 @@ export default function Dashboard() {
               </Link>
             )) : (
               <div className="w-[80vw] flex items-center justify-center py-4">
-                  <span>Tournament card is empty!</span>
+                  <span>Hozircha turnirlar o'tkazmagansiz!</span>
               </div>
             )}
           </div>
@@ -178,7 +178,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="p-6">
-            <h3 className="font-bold text-foreground mb-4">Recent Matches</h3>
+            <h3 className="font-bold text-foreground mb-4">Oxirgi o'yinlar</h3>
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
@@ -199,7 +199,7 @@ export default function Dashboard() {
           </Card>
 
           <Card className="p-6">
-            <h3 className="font-bold text-foreground mb-4">Leaderboard</h3>
+            <h3 className="font-bold text-foreground mb-4">Rating</h3>
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">

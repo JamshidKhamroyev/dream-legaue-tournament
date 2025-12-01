@@ -6,10 +6,12 @@ import { ChildProps, IUser } from "@/types/types"
 import { useRouter } from "next/navigation"
 import { FC, useEffect, useState } from "react"
 import Loader from "../ui/loader"
+import { io } from "socket.io-client";
+
 
 const AuthProvider: FC<ChildProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(false)
-  const { user, login } = useAuth()
+  const { user, login, connect, socket } = useAuth()
   const { push } = useRouter()
 
   useEffect(() => {
@@ -20,6 +22,7 @@ const AuthProvider: FC<ChildProps> = ({ children }) => {
           const { data } = await axiosClient.get<{ user: IUser}>(`/api/auth/me`)
           if(data.user) login(data.user)
         }
+        socket?.emit("addOnlineUser", user);
       } catch {
         push('/auth/login')
       } finally {
@@ -27,7 +30,12 @@ const AuthProvider: FC<ChildProps> = ({ children }) => {
       }
     }
     getMe()
-  }, [user])  
+  }, [user])
+  
+  useEffect(() => {
+    connect(io('http://localhost:4000'))
+  },[])
+
   if (loading) return <Loader />
   return (
     <div>{children}</div>
