@@ -2,7 +2,7 @@
 
 import { MouseEvent, useEffect, useState } from "react"
 import Link from "next/link"
-import { Trophy, Search, ArrowUpDown, Trash2, AlignStartHorizontal, Play, Eye, PlusCircle, ArrowLeft, Loader2 } from "lucide-react"
+import { Trophy, Search, ArrowUpDown, Trash2, Play, Eye, PlusCircle, ArrowLeft, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -38,6 +38,7 @@ export default function TournamentsPage() {
       setDeleteLoad(id)
       const { data } = await axiosClient.delete<{ tourner: ITournament}>(`/api/tournament/delete/${id}`)      
       setTournaments(prev => prev.filter(item => item._id !== data.tourner._id))
+      socket?.emit("deleteTournament", { tournament: data.tourner})
     } catch (error) {
       console.log(error);
     } finally {
@@ -69,13 +70,19 @@ export default function TournamentsPage() {
   }
 
   const onStart = async (id: string) => {
+    socket?.emit("giveLoader", true)
+    setDeleteLoad(id)
     try {
       const { data } = await axiosClient.post<{ matches: string[] }>(`/api/tournament/generate/${id}`)
       setTournaments(prev => prev.map(item => {
         return { ...item, status: "started" }
       }))
+      socket?.emit("changeStatus", { id, status: "started" })
     } catch (error) {
       console.log(error);
+    } finally {
+      setDeleteLoad("")
+      socket?.emit("giveLoader", true)
     }
   }
   
@@ -84,11 +91,42 @@ export default function TournamentsPage() {
   },[])
 
   useEffect(() => {
-    socket?.on("getTournament", ({ tournament }: { tournament: ITournament }) => {
+    const handleUpdate = ({ tournament }: { tournament: ITournament }) => {
       setTournaments(prev =>
         prev.map(t => (t._id === tournament._id ? tournament : t))
       );
-    })
+    };
+  
+    const handleDelete = ({ tournament }: { tournament: ITournament }) => {
+      setTournaments(prev => prev.filter(t => t._id !== tournament._id));
+    };
+  
+    const handleNew = ({ tournament }: { tournament: ITournament }) => {
+      setTournaments(prev => [...prev, tournament]);
+    };
+
+    const changeStatus = ({ id, status }: { id: string, status: string }) => {
+      setTournaments(prev => prev.map(tourner => {
+        if(tourner._id === id){
+          return {...tourner, status }
+        }
+
+        return tourner
+      }))
+    };
+  
+    socket?.on("getTournament", handleUpdate);
+    socket?.on("getDeletedTournament", handleDelete);
+    socket?.on("getNewTournament", handleNew);
+    socket?.on("getNewStatus", changeStatus);
+  
+    return () => {
+      socket?.off("getTournament", handleUpdate);
+      socket?.off("getDeletedTournament", handleDelete);
+      socket?.off("getNewTournament", handleNew);
+      socket?.off("getNewStatus", changeStatus);
+    };  
+  
   },[socket, user])
 
 
@@ -211,7 +249,7 @@ export default function TournamentsPage() {
                         <Button
                           variant="outline"
                           onClick={() => onJoinHandler(tournament._id)}
-                          disabled={!!tournament.players.find(u => u._id === user?._id)}
+                          disabled={!!tournament.players.find(u => u._id === user?._id) || tournament.status !== "pending"}
                           title={tournament.players.find(u => u._id === user?._id) ? "Siz allaqachon qo'shilgansiz!" : "Qo'shilish"}
                           size="sm"
                           className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r cursor-pointer hover:bg-gradient-to-l duration-300 from-green-500 to-emerald-600 text-white shadow hover:shadow-lg hover:text-white"

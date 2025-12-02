@@ -37,6 +37,22 @@ io.on("connection", (socket) => {
     socket.on("addNewParticipant", tournament => {
         io.emit("getTournament", tournament)
     })
+
+    socket.on("addNewTournament", tournament => {
+        io.emit("getNewTournament", tournament)
+    })
+
+    socket.on("giveLoader", load => {
+        io.emit("showLoader", load)
+    })
+
+    socket.on("changeStatus", ({ id, status }) => {
+        io.emit("getNewStatus", { id, status })
+    })
+
+    socket.on("deleteTournament", tournament => {
+        io.emit("getDeletedTournament", tournament)
+    })
     
     socket.on("disconnect", () => {
         users = users.filter(u => u.socketId !== socket.id);

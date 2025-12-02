@@ -75,7 +75,7 @@ const generateMatches = async (req, res) => {
             return res.status(400).json({ message: "Invalid tournament ID" })
 
         await connectToDatabase()
-        const tournament = await Tournament.findById(id)
+        const tournament = await Tournament.findById(id).populate("matchs")
         if (!tournament) return res.status(404).json({ message: "Tournament not found" })
         if (tournament.status !== "pending")
             return res.status(400).json({ message: "Matches already generated or tournament started" })
@@ -143,9 +143,16 @@ const generateMatches = async (req, res) => {
 
         tournament.matchs = createdMatchIds
         tournament.status = "started"
-        await tournament.save()
-
-        res.json({ message: "Matches generated successfully", matches: createdMatchIds })
+        await tournament.save() 
+        const stndMatchs = await Tournament.findById(id)
+        .populate({
+            path: "matchs",
+            populate: [
+            { path: "player1", select: "_id email"},
+            { path: "player2", select: "_id email"}
+            ]
+        });
+        res.json({ message: "Matches generated successfully", matches: stndMatchs.matchs })
     } catch (e) {
         res.status(500).json({ message: "Server error", error: e })
     }
@@ -192,11 +199,11 @@ const changeTournerRound = async(req, res) => {
             return res.status(400).json({ message: "Invalid ID" })
 
         await connectToDatabase()
-        const match = await Match.findById(id)
+        const match = await Match.findById(id).populate("player1", "_id email").populate("player2", "_id email")
         if (!match) return res.status(404).json({ message: "Match not found" })
         if (match.winner) return res.status(400).json({ message: "Winner already set" })
 
-        if (winnerId !== match.player1.toString() && winnerId !== match.player2.toString())
+        if (winnerId !== match.player1._id.toString() && winnerId !== match.player2._id.toString())
             return res.status(400).json({ message: "Winner must be one of the players" })
 
         match.winner = winnerId
@@ -206,10 +213,14 @@ const changeTournerRound = async(req, res) => {
             const nextmatch = await Match.findById(match.nextMatchId)
             nextmatch.player1 ? nextmatch.player2 = winnerId : nextmatch.player1 = winnerId
             await nextmatch.save()
-            return res.json({ message: "Winner set and next round updated", newMatch: nextmatch, match })
+            const populatedNextMatch = await Match.findById(nextmatch._id).populate("player1", "_id email").populate("player2", "_id email");
+            const populateMatch = await Match.findById(id).populate("player1", "_id email").populate("player2", "_id email").populate("winner", "_id email")
+            return res.json({ message: "Winner set and next round updated", newMatch: populatedNextMatch, match: populateMatch })
         }
-        const tournament = await Tournament.findByIdAndUpdate(match.tournamet, { status: "finished" })
-        return res.json({ message: "Winner set and next round updated",  tournament, match})
+        
+        const populateMatch = await Match.findById(id).populate("player1", "_id email").populate("player2", "_id email").populate("winner", "_id email")
+        const tournament = await Tournament.findByIdAndUpdate(match.tournamet, { status: "finished" }, { new: true })
+        return res.json({ message: "Winner set and next round updated",  tournament, match: populateMatch })
     } catch (error) {
         res.status(500).json(error)   
     }

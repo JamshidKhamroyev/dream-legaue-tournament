@@ -12,9 +12,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { axiosClient } from "@/lib/axios"
 import { ITournament } from "@/types/types"
+import useAuth from "@/hooks/use-auth"
 
 export default function CreateTournamentPage() {
   const router = useRouter()
+  const { socket } = useAuth()
   const [loading, setLoading] = useState<boolean>(false)
   const [formData, setFormData] = useState({ title: "", location: "", time: "" })
 
@@ -28,6 +30,7 @@ export default function CreateTournamentPage() {
     setLoading(true)
     try {
       const { data } = await axiosClient.post<{ tourner: ITournament }>(`/api/tournament/create`, formData)  
+      socket?.emit("addNewTournament", { tournament: data.tourner })
       router.push("/tournaments")
     } catch (error) {
       console.log(error);

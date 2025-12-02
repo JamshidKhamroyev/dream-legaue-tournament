@@ -2,23 +2,29 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Trophy, Users, Calendar, MapPin, ArrowLeft, Edit } from "lucide-react"
+import { Trophy, Users, Calendar, MapPin, ArrowLeft, Edit, Loader2, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { TournamentBracket } from "@/components/tournament-bracket"
 import { axiosClient } from "@/lib/axios"
 import { ITournament, Match } from "@/types/types"
 import { format } from "date-fns"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
+import useAuth from "@/hooks/use-auth"
 
 
 export default function TournamentPage() {
   const params = useParams()
   const tournamentId = params.id as string
+  const { user, socket } = useAuth()
   const [tournament, setTournament] = useState<ITournament>()
   const [matchs, setMatches] = useState<Match[]>([])
+  const [load, setLoad] = useState(false)
+  const router = useRouter()
+  const [isStarting, setIsStarting] = useState<boolean>(false)
   const [winsByEmail, setWinsByEmail] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState<boolean>(true)
+  const [global, setGlobal] = useState<boolean>(false)
 
   const [selectedMatchId, setSelectedMatchId] = useState<string | undefined>(undefined)
 
@@ -50,9 +56,55 @@ export default function TournamentPage() {
     }
   }
 
+  const onStart = async (id: string) => {
+    setIsStarting(true)
+    socket?.emit("giveLoader", true)
+    try {
+      const { data } = await axiosClient.post<{ matches: Match[] }>(`/api/tournament/generate/${id}`)
+      socket?.emit("changeStatus", { id, status: "started" })
+      setTournament(prev => {
+        if (!prev) return prev
+        return { ...prev, status: "started" };
+      })
+      setMatches(data.matches)
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsStarting(false)
+      socket?.emit("giveLoader", false)
+    }
+  }
+
+  const onDeleteHandler = async(id: string) => {
+    setLoad(true)
+    try {
+      const { data } = await axiosClient.delete<{ tourner: ITournament}>(`/api/tournament/delete/${id}`)      
+      socket?.emit("deleteTournament", { tournament: data.tourner})
+      router.push('/tournaments')
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoad(false)
+    }
+  }
+
   useEffect(() => {
     getMatchs()
   },[tournamentId])
+
+  useEffect(() => {
+    socket?.on("showLoader", (load: boolean) => {
+      setGlobal(load)
+    })
+
+    
+    socket?.on("getNewStatus", ({ id, status }: { id: string, status: string }) => {
+      setTournament(prev => {
+        if (prev){ return ({ ...prev, status: status }) }
+      })
+    })
+
+  },[socket, user])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -67,8 +119,6 @@ export default function TournamentPage() {
     }
   }
 
-  console.log(winsByEmail);
-  
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,10 +144,42 @@ export default function TournamentPage() {
               <span className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusColor(tournament?.status!)}`}>
                 {tournament && tournament.status.charAt(0).toUpperCase() + tournament?.status.slice(1) || "noaniq"}
               </span>
-              <Button variant="destructive" size="sm">
-                <Edit className="w-4 h-4 mr-2 cursor-pointer" />
-                O'chirish
-              </Button>
+              {tournament?.creator === user?._id && (
+                <Button variant="destructive" className="cursor-pointer" size="sm" onClick={() => onDeleteHandler(tournamentId)}>
+                  {load ? (
+                    <div className="flex opacity-80 items-center gap-2 justify-center">
+                      <Loader2 className="h-4 w-4 animate-spin"/>
+                      <span>O'chirilmoqda...</span>
+                    </div>  
+                  ) : (
+                    <>
+                      <Edit className="w-4 h-4 mr-2 cursor-pointer" />
+                      O'chirish
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {tournament?.creator === user?._id && tournament?.status === "pending" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onStart(tournament._id)}
+                  className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r cursor-pointer hover:bg-gradient-to-l duration-300 from-yellow-400 to-orange-500 text-white shadow hover:shadow-lg hover:text-white "
+                >
+                  {isStarting ? (
+                    <div className="flex opacity-80 items-center gap-2 justify-center">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Boshlanmoqda...</span>
+                    </div>  
+                  ) : (
+                    <>
+                       <Play size={16} />
+                        Boshlash
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -149,8 +231,9 @@ export default function TournamentPage() {
             <Card className="p-6">
             <TournamentBracket
               matches={matchs}
+              global={global}
+              setMatches={setMatches}
               creator={tournament?.creator}
-              title="My Tournament"
               setSelect={setSelectedMatchId}
             />
             </Card>

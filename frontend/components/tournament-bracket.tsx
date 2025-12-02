@@ -1,35 +1,39 @@
 "use client"
 
-import { IUser, Match } from "@/types/types"
+import { ITournament, IUser, Match } from "@/types/types"
 import BracketMatch from "./bracket-match"
 import MatchWinnerModal from "./modals/check-modal"
 import { useState } from "react"
 import { axiosClient } from "@/lib/axios"
 import { useRouter } from "next/navigation"
 import useAuth from "@/hooks/use-auth"
+import { Loader2 } from "lucide-react"
+import MatchGeneratorLoader from "./ui/global-loader"
 
 interface TournamentBracketProps {
   matches: Match[]
-  title?: string
   creator?: IUser
+  setMatches: (prev: Match[]) => void
   setSelect: (id: string) => void
+  global: boolean
 }
 
 export function TournamentBracket({
   matches,
-  title = "Turnir setkasi!",
   setSelect,
+  global,
+  setMatches,
   creator
 }: TournamentBracketProps) {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const { user } = useAuth()
+  const { user, socket } = useAuth()
   const router = useRouter()
 
   const grouped = matches ? groupByRound(matches) : []
 
   const handleSelectMatch = (match: Match) => {
-    if(creator?._id === user?._id && !match.winner){
+    if(creator === user?._id && !match.winner && (match.player1 || match.player2)){
       setSelectedMatch(match)
       setIsModalOpen(true)
     }
@@ -38,8 +42,24 @@ export function TournamentBracket({
 
   const handleSubmitWinner = async (matchId: string, winnerId: string) => {
     try {
-      await axiosClient.put(`/api/tournament/change-round/${matchId}`, { winnerId })
+      const { data } = await axiosClient.put<{ tournament?: ITournament, newMatch?: Match, match?: Match }>(`/api/tournament/change-round/${matchId}`, { winnerId })
       router.refresh()
+      if(data.tournament){
+        socket?.emit("changeStatus", { id: data.tournament._id, status: data.tournament.status })
+      }
+
+      if(data.newMatch){
+        const newData = matches.map(match => {
+          if(match._id === data.match?._id){
+            return data.match
+          }
+          if(match._id === data.newMatch?._id){
+            return data.newMatch
+          }
+          return match
+        })
+        setMatches(newData)
+      }
       setIsModalOpen(false)
       setSelectedMatch(null)
     } catch (error) {
@@ -61,42 +81,46 @@ export function TournamentBracket({
     <div className="space-y-4 w-full">
       <h2 className="text-xl font-bold text-foreground">{user?._id === creator ? "Mening turnirim!" :  "Turnir!"}</h2>
 
-      <div className="overflow-x-auto pb-6">
-        <div className="flex gap-16 min-w-min p-6 bg-muted/20 rounded-lg transition-all">
-          {matches && matches.length > 0 ? (
-            grouped.map((roundMatches, roundIndex) => {
-              const isFinal = roundIndex === grouped.length - 1
-              return (
-                <div
-                  key={roundIndex}
-                  className="flex flex-col gap-6 justify-evenly min-w-[230px] relative"
-                >
-                  <h3 className="text-sm font-bold text-muted-foreground text-center">
-                    {isFinal ? "Final" : `Round ${roundMatches[0].round}`}
-                  </h3>
+      <div className="overflow-x-auto pb-6 relative">
+        {global ? (
+          <MatchGeneratorLoader />
+        ) :  (
+          <div className="flex gap-16 min-w-min p-6 bg-muted/20 rounded-lg transition-all">
+            {matches && matches.length > 0 ? (
+              grouped.map((roundMatches, roundIndex) => {
+                const isFinal = roundIndex === grouped.length - 1
+                return (
+                  <div
+                    key={roundIndex}
+                    className="flex flex-col gap-6 justify-evenly min-w-[230px] relative"
+                  >
+                    <h3 className="text-sm font-bold text-muted-foreground text-center">
+                      {isFinal ? "Final" : `Round ${roundMatches[0].round}`}
+                    </h3>
 
-                  <div className="flex flex-col gap-10">
-                    {roundMatches.map((match, index) => {
-                      const direction = index % 2 === 0 ? "down" : "up"
-                      return (
-                        <div key={match._id} className="relative">
-                          <BracketMatch
-                            match={match}
-                            onSelectMatch={handleSelectMatch}
-                            isSelected={selectedMatch?._id === match._id}
-                          />
-                          {!isFinal && <BracketLine direction={direction} height={80} />}
-                        </div>
-                      )
-                    })}
+                    <div className="flex flex-col gap-10">
+                      {roundMatches.map((match, index) => {
+                        const direction = index % 2 === 0 ? "down" : "up"
+                        return (
+                          <div key={match._id} className="relative">
+                            <BracketMatch
+                              match={match}
+                              onSelectMatch={handleSelectMatch}
+                              isSelected={selectedMatch?._id === match._id}
+                            />
+                            {!isFinal && <BracketLine direction={direction} height={80} />}
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              )
-            })
-          ) : (
-            <p>O'yinlar mavjud emas!</p>
-          )}
-        </div>
+                )
+              })
+            ) : (
+              <p>O'yinlar mavjud emas!</p>
+            )}
+          </div>
+        )}
       </div>
 
       <MatchWinnerModal
