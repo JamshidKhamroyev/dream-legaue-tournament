@@ -1,27 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Users, Search, BarChart3, Shuffle, Swords, Trophy, 
-    Brain, Zap, LineChart, Equal, Target, ShieldCheck,
-    Hourglass, Layers, CheckCircle
-  } from "lucide-react";
+  Trophy, Search, BarChart3, Brain, Target, ShieldCheck,
+  Sparkles, Crown, CheckCircle
+} from "lucide-react";
 
-export default function MatchGeneratorLoader() {
+export default function WinnerDeterminationLoader() {
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [pulseScale, setPulseScale] = useState(1);
 
-  
-const steps = [
-    { icon: Users,        text: "Ishtirokchilar ro'yxati yig'ilmoqda",    color: "text-blue-400" },
-    { icon: Search,       text: "Profil ma'lumotlari tahlil qilinmoqda",   color: "text-indigo-400" },
-    { icon: BarChart3,    text: "Statistikalar tekshirilmoqda",            color: "text-teal-400" },
-    { icon: Zap,          text: "Tezlik va faollik ko'rsatkichlari aniqlanmoqda", color: "text-yellow-400" },
-    { icon: Target,       text: "O'yinchilar kuch darajasi solishtirilmoqda", color: "text-red-400" },
-    { icon: Equal,        text: "Muvozanatli juftliklar tanlanmoqda",      color: "text-rose-400" },
-    { icon: Shuffle,      text: "Tasodifiy faktorlar hisoblanmoqda",       color: "text-orange-400" },
-    { icon: Swords,       text: "Raqiblar moslashtirilmoqda",              color: "text-red-500" },
-    { icon: ShieldCheck,  text: "Adolatli o'yin nazorati o'rnatilmoqda",   color: "text-green-500" },
-  ];  
+  const steps = [
+    { icon: BarChart3,   text: "O‘yin statistikasi solishtirilmoqda",    color: "text-indigo-400" },
+    { icon: Crown,       text: "G‘olib nomzodlari saralanyapti",         color: "text-yellow-400" },
+    { icon: Trophy,      text: "Yakuniy g‘olib aniqlanmoqda",            color: "text-orange-400" },
+    { icon: CheckCircle, text: "Jarayon yakunlanmoqda",                  color: "text-green-500" },
+  ];
 
   useEffect(() => {
     const progressInterval = setInterval(() => {
@@ -32,11 +25,11 @@ const steps = [
         }
         return prev + 1;
       });
-    }, 50);
+    }, 200);
 
     const stepInterval = setInterval(() => {
       setCurrentStep(prev => (prev + 1) % steps.length);
-    }, 2000);
+    }, 5000);
 
     const pulseInterval = setInterval(() => {
       setPulseScale(prev => prev === 1 ? 1.1 : 1);
@@ -54,12 +47,12 @@ const steps = [
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Main Card */}
+
         <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-slate-700/50">
-          
-          {/* Animated Icon */}
+
+          {/* Main animated icon */}
           <div className="flex justify-center mb-8">
-            <div 
+            <div
               className="relative"
               style={{ transform: `scale(${pulseScale})`, transition: 'transform 0.5s ease-in-out' }}
             >
@@ -70,10 +63,10 @@ const steps = [
             </div>
           </div>
 
-          {/* Status Text */}
+          {/* Text */}
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-white mb-2">
-              Raqiblar Tanlanmoqda...
+              G‘olib aniqlanmoqda...
             </h2>
             <p className={`text-lg ${steps[currentStep].color} font-medium transition-all duration-300`}>
               {steps[currentStep].text}
@@ -87,7 +80,7 @@ const steps = [
               <span className="font-bold text-white">{progress}%</span>
             </div>
             <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full transition-all duration-300 ease-out relative"
                 style={{ width: `${progress}%` }}
               >
@@ -102,19 +95,18 @@ const steps = [
               const StepIcon = step.icon;
               const isActive = index === currentStep;
               const isPassed = index < currentStep || progress === 100;
-              
+
               return (
                 <div key={index} className="flex flex-col items-center gap-2">
-                  <div 
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      isActive 
-                        ? 'bg-gradient-to-br from-purple-600 to-pink-600 scale-110 shadow-lg shadow-purple-500/50' 
-                        : isPassed
-                        ? 'bg-green-500'
-                        : 'bg-slate-700'
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isActive
+                      ? 'scale-110 shadow-lg shadow-white/20'
+                      : isPassed
+                      ? 'bg-green-500'
+                      : 'bg-slate-700'
                     }`}
                   >
-                    <StepIcon 
+                    <StepIcon
                       className={`w-6 h-6 ${isActive || isPassed ? 'text-white' : 'text-slate-500'}`}
                       strokeWidth={2}
                     />
@@ -127,7 +119,7 @@ const steps = [
             })}
           </div>
 
-          {/* Particles Animation */}
+          {/* Bottom particles */}
           <div className="mt-8 flex justify-center gap-2">
             {[...Array(3)].map((_, i) => (
               <div
@@ -140,10 +132,11 @@ const steps = [
 
         </div>
 
-        {/* Bottom Text */}
         <p className="text-center text-slate-400 mt-6 text-sm">
-          Iltimos kuting, eng yaxshi raqiblar tanlanmoqda...
+          Iltimos kuting, yangi o‘yinning g‘olibi aniqlanmoqda...
         </p>
+
       </div>
     </div>
-)}
+  );
+}

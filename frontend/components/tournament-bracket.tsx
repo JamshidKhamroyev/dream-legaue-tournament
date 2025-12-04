@@ -9,13 +9,14 @@ import { useRouter } from "next/navigation"
 import useAuth from "@/hooks/use-auth"
 import { Loader2 } from "lucide-react"
 import MatchGeneratorLoader from "./ui/global-loader"
+import WinnerDeterminationLoader from "./ui/round-loader"
 
 interface TournamentBracketProps {
   matches: Match[]
   creator?: IUser
   setMatches: (prev: Match[]) => void
   setSelect: (id: string) => void
-  global: boolean
+  global: "start" | "round" | ""
 }
 
 export function TournamentBracket({
@@ -41,7 +42,7 @@ export function TournamentBracket({
 
   const handleSubmitWinner = async (matchId: string, winnerId: string) => {
     try {
-      socket?.emit("giveLoader", true)
+      socket?.emit("giveLoader", "round")
       const { data } = await axiosClient.put<{ tournament?: ITournament, newMatch?: Match, match?: Match }>(`/api/tournament/change-round/${matchId}`, { winnerId })
       router.refresh()
       if(data.tournament){
@@ -78,7 +79,7 @@ export function TournamentBracket({
       console.error("Error updating winner:", error)
       throw error
     } finally {
-      socket?.emit("giveLoader", false)
+      socket?.emit("giveLoader", "")
     }
   }
 
@@ -105,23 +106,23 @@ export function TournamentBracket({
       <h2 className="text-xl font-bold text-foreground">{user?._id === creator ? "Mening turnirim!" :  "Turnir!"}</h2>
 
       <div className="overflow-x-auto pb-6 relative">
-        {global ? (
+        {global === "start" ? (
           <MatchGeneratorLoader />
-        ) :  (
-          <div className="flex gap-16 min-w-min p-6 bg-muted/20 rounded-lg transition-all">
+        ) : global === "" ? (
+          <div className="flex sm:gap-16 gap-7 min-w-min sm:p-6 p-2 bg-muted/20 rounded-lg transition-all">
             {matches && matches.length > 0 ? (
               grouped.map((roundMatches, roundIndex) => {
                 const isFinal = roundIndex === grouped.length - 1
                 return (
                   <div
                     key={roundIndex}
-                    className="flex flex-col gap-6 justify-evenly min-w-[230px] relative"
+                    className="flex flex-col gap-6 justify-evenly sm:min-w-[230px] relative"
                   >
                     <h3 className="text-sm font-bold text-muted-foreground text-center">
                       {isFinal ? "Final" : `Round ${roundMatches[0].round}`}
                     </h3>
 
-                    <div className="flex flex-col gap-10">
+                    <div className="flex flex-col sm:gap-10 gap-y-5">
                       {roundMatches.map((match, index) => {
                         const direction = index % 2 === 0 ? "down" : "up"
                         return (
@@ -143,7 +144,9 @@ export function TournamentBracket({
               <p>O'yinlar mavjud emas!</p>
             )}
           </div>
-        )}
+        ) : (
+          <WinnerDeterminationLoader />
+        ) }
       </div>
 
       <MatchWinnerModal
@@ -172,7 +175,7 @@ function BracketLine({
 
   return (
     <div className="absolute top-1/2 left-full -translate-y-1/2">
-      <div className="w-10 border-b border-border"></div>
+      <div className="sm:w-10 w-5 border-b border-border"></div>
       <div
         className="border-r border-border mx-auto"
         style={{

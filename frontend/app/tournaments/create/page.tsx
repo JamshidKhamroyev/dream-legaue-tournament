@@ -50,17 +50,17 @@ export default function CreateTournamentPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to Tournaments
           </Link>
-          <h1 className="text-2xl font-bold text-foreground">Create Tournament</h1>
+          <h1 className="text-2xl max-sm:hidden font-bold text-foreground">Create Tournament</h1>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <Card className="p-8">
+      <main className="max-w-3xl mx-auto px-4 max-sm:px-1 sm:py-8 py-4">
+        <Card className="sm:p-8 p-3">
           <form onSubmit={handleSubmit} className="space-y-6">
 
             <div>
               <Label htmlFor="title" className="block text-sm font-semibold mb-2">
-                Title *
+                Turnir nomi *
               </Label>
               <div className="flex items-center gap-2">
                 <Type className="w-4 h-4 text-muted-foreground" />
@@ -79,7 +79,7 @@ export default function CreateTournamentPage() {
             {/* Location */}
             <div>
               <Label htmlFor="location" className="block text-sm font-semibold mb-2">
-                Location *
+                Manzili *
               </Label>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -98,7 +98,7 @@ export default function CreateTournamentPage() {
             {/* Time */}
             <div>
               <Label htmlFor="time" className="block text-sm font-semibold mb-2">
-                Time *
+                Vaqti *
               </Label>
               <div className="flex items-center gap-2">
                 <CalendarClock className="w-4 h-4 text-muted-foreground" />

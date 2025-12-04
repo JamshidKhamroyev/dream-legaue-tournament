@@ -2,7 +2,7 @@
 
 import { MouseEvent, useEffect, useState } from "react"
 import Link from "next/link"
-import { Trophy, Search, ArrowUpDown, Trash2, Play, Eye, PlusCircle, ArrowLeft, Loader2 } from "lucide-react"
+import { Trophy, Search, ArrowUpDown, Trash2, Play, Eye, PlusCircle, ArrowLeft, Loader2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -147,47 +147,73 @@ export default function TournamentsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "started":
-        return "bg-green-400 text-white"
+        return `
+          bg-green-500 text-white
+          hover:bg-green-600 
+          dark:hover:bg-green-500/80
+          transition-colors
+        `
+  
       case "finished":
-        return "bg-gray-300 text-green-700 dark:bg-green-900 dark:text-green-300"
+        return `
+          bg-red-100 text-red-700 
+          dark:bg-green-900 dark:text-green-300
+          hover:bg-red-200 
+          dark:hover:bg-green-800
+          transition-colors
+        `
+  
       case "pending":
-        return "bg-sky-600 text-white"
+        return `
+          bg-sky-600 text-white
+          hover:bg-sky-700
+          dark:hover:bg-sky-600/80
+          transition-colors
+        `
+  
       default:
-        return "bg-muted text-muted-foreground"
+        return `
+          bg-muted text-muted-foreground
+          hover:bg-muted/90 hover:text-black
+          transition-colors
+        `
     }
   }
-
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="sm:max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit mb-3"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit sm:mb-3"
           >
             <ArrowLeft className="w-4 h-4" />
             Uyga qaytish!
           </Link>
-            <Button asChild>
-              <Link href="/tournaments/create">Turnir yaratish!</Link>
-            </Button>
+              <Button asChild>
+                <Link href="/tournaments/create">
+                  <Plus className="w-4 h-4 sm:mr-2" />
+                  <span className="max-sm:hidden">Yangi turnir</span>
+                </Link>
+              </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+              <Search className="w-4 h-4 absolute left-3 max-sm:left-2 top-3 text-muted-foreground" />
               <Input
                 placeholder="Turnirlarni qidirish..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 max-sm:pl-7"
               />
             </div>
             <div className="flex gap-2">
@@ -206,12 +232,12 @@ export default function TournamentsPage() {
             </div>
           </div>
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex sm:gap-2 gap-x-1 gap-y-2 flex-wrap">
             {(["all", "started", "pending", "finished"] as const).map((status) => (
               <Button
                 key={status}
-                variant={filterStatus === status ? "default" : "outline"}
                 onClick={() => setFilterStatus(status)}
+                className={getStatusColor(status)}
                 size="sm"
               >
                 {status === "all" ? "All Tournaments" : status.charAt(0).toUpperCase() + status.slice(1)}
@@ -229,13 +255,13 @@ export default function TournamentsPage() {
           ) : filteredTournaments.length > 0 ? (
             filteredTournaments.map((tournament) => (
               <div key={tournament._id}>
-                <Card className="hover:shadow-2xl relative transition-all cursor-pointer rounded-2xl overflow-hidden border border-gray-200 shadow-md">
+                <Card className="hover:shadow-2xl relative transition-all cursor-pointer sm:rounded-2xl rounded-sm overflow-hidden border border-gray-200 shadow-md">
                   {deleteLoad === tournament._id && (
                     <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-white/80">
                       <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
                     </div>
                   )}
-                  <div className="px-6 py-4 flex items-start justify-between gap-4">
+                  <div className="sm:px-6 px-2 sm:py-4 flex items-start justify-between sm:gap-4 gap-2">
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-bold text-xl text-gray-900">{tournament.title}</h3>
@@ -255,7 +281,7 @@ export default function TournamentsPage() {
                           className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r cursor-pointer hover:bg-gradient-to-l duration-300 from-green-500 to-emerald-600 text-white shadow hover:shadow-lg hover:text-white"
                         >
                           <PlusCircle size={16} />
-                          Qo'shilish
+                          <span className="max-sm:hidden">Qo'shilish</span>
                         </Button>
 
                         <Button
@@ -265,7 +291,7 @@ export default function TournamentsPage() {
                           className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r cursor-pointer hover:bg-gradient-to-l duration-300 from-blue-500 to-indigo-600 text-white shadow hover:shadow-lg hover:text-white "
                         >
                           <Eye size={16} />
-                          Ko'rish
+                          <span className="max-sm:hidden">Ko'rish</span>
                         </Button>
 
                         {user?._id === tournament.creator._id && (
@@ -276,7 +302,7 @@ export default function TournamentsPage() {
                             className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r cursor-pointer hover:bg-gradient-to-l duration-300 from-red-500 to-rose-600 text-white shadow hover:shadow-lg hover:text-white"
                           >
                             <Trash2 size={16} />
-                            O'chirish
+                            <span className="max-sm:hidden">O'chirish</span>
                           </Button>
                         )}
 
@@ -291,12 +317,12 @@ export default function TournamentsPage() {
                             className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r cursor-pointer hover:bg-gradient-to-l duration-300 from-yellow-400 to-orange-500 text-white shadow hover:shadow-lg hover:text-white "
                           >
                             <Play size={16} />
-                            Boshlash
+                            <span className="max-sm:hidden">Boshlash</span>
                           </Button>
                         )}
                       </div>
 
-                      <div className="grid grid-cols-3 gap-6 text-sm">
+                      <div className="grid sm:grid-cols-3 grid-cols-2 gap-6 text-sm">
                         <div>
                           <p className="text-gray-400 text-xs mb-1">Ishtirokchilar</p>
                           <p className="font-semibold text-gray-900">
@@ -309,7 +335,7 @@ export default function TournamentsPage() {
                             {format(new Date(tournament.time), "P hh:mm")}
                           </p>
                         </div>
-                        <div>
+                        <div className="max-sm:hidden">
                           <p className="text-gray-400 text-xs mb-1">Jarayon</p>
                           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                             <div

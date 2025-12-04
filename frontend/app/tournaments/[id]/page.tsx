@@ -24,7 +24,7 @@ export default function TournamentPage() {
   const [isStarting, setIsStarting] = useState<boolean>(false)
   const [winsByEmail, setWinsByEmail] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState<boolean>(true)
-  const [global, setGlobal] = useState<boolean>(false)
+  const [global, setGlobal] = useState<"round" | "start" | "">("")
   const [startDate, setStartDate] = useState<string>("")
   const [timeLeft, setTimeLeft] = useState(new Date(startDate).getTime() - Date.now());
 
@@ -66,7 +66,7 @@ export default function TournamentPage() {
 
   const onStart = async (id: string) => {
     setIsStarting(true)
-    socket?.emit("giveLoader", true)
+    socket?.emit("giveLoader", "start")
     try {
       const { data } = await axiosClient.post<{ matches: Match[] }>(`/api/tournament/generate/${id}`)
       socket?.emit("changeStatus", { id, status: "started" })
@@ -80,7 +80,7 @@ export default function TournamentPage() {
       console.log(error);
     } finally {
       setIsStarting(false)
-      socket?.emit("giveLoader", false)
+      socket?.emit("giveLoader", "")
     }
   }
 
@@ -110,7 +110,7 @@ export default function TournamentPage() {
   }, [startDate]);
 
   useEffect(() => {
-    socket?.on("showLoader", (load: boolean) => {
+    socket?.on("showLoader", (load: "start" | "round" | "") => {
       setGlobal(load)
     })
     
@@ -125,16 +125,38 @@ export default function TournamentPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "started":
-        return "bg-green-400 text-white"
+        return `
+          bg-green-500 text-white
+          hover:bg-green-600 
+          dark:hover:bg-green-500/80
+          transition-colors
+        `
+  
       case "finished":
-        return "bg-gray-300 text-green-700 dark:bg-green-900 dark:text-green-300"
+        return `
+          bg-red-100 text-red-700 
+          dark:bg-green-900 dark:text-green-300
+          hover:bg-red-200 
+          dark:hover:bg-green-800
+          transition-colors
+        `
+  
       case "pending":
-        return "bg-sky-600 text-white"
+        return `
+          bg-sky-600 text-white
+          hover:bg-sky-700
+          dark:hover:bg-sky-600/80
+          transition-colors
+        `
+  
       default:
-        return "bg-muted text-muted-foreground"
+        return `
+          bg-muted text-muted-foreground
+          hover:bg-muted/90 hover:text-black
+          transition-colors
+        `
     }
   }
-
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,34 +165,36 @@ export default function TournamentPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link
             href="/tournaments"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit mb-3"
+            className="flex items-center justify-between w-full gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit mb-3"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Barcha turnilar!
+            <div className="flex items-center gap-1">
+              <ArrowLeft className="w-4 h-4" />
+              Barcha turnilar!
+            </div>
+            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusColor(tournament?.status!)}`}>
+                {tournament && tournament.status.charAt(0).toUpperCase() + tournament?.status.slice(1) || "noaniq"}
+              </span>
           </Link>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Trophy className="w-8 h-8 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">{tournament?.title || "Nomsiz"}</h1>
-                <p className="text-sm text-muted-foreground">{tournament?.location || "Manzilsiz  "}</p>
+                <h1 className="sm:text-2xl text-lg font-bold text-foreground">{tournament?.title.slice(0, 10) || "Nomsiz"}</h1>
+                <p className="text-sm text-muted-foreground">{tournament?.location.slice(0, 17) || "Manzilsiz  "}</p>
               </div>
             </div>
             <div className="flex gap-2 items-center">
-              <span className={`text-xs font-semibold px-3 py-1 rounded-full ${getStatusColor(tournament?.status!)}`}>
-                {tournament && tournament.status.charAt(0).toUpperCase() + tournament?.status.slice(1) || "noaniq"}
-              </span>
               {tournament?.creator === user?._id && (
                 <Button variant="destructive" className="cursor-pointer" size="sm" onClick={() => onDeleteHandler(tournamentId)}>
                   {load ? (
                     <div className="flex opacity-80 items-center gap-2 justify-center">
                       <Loader2 className="h-4 w-4 animate-spin"/>
-                      <span>O'chirilmoqda...</span>
+                      <span className="max-sm:hidden">O'chirilmoqda...</span>
                     </div>  
                   ) : (
                     <>
-                      <Edit className="w-4 h-4 mr-2 cursor-pointer" />
-                      O'chirish
+                      <Edit className="w-4 h-4 sm:mr-2 cursor-pointer" />
+                      <span className="max-sm:hidden">O'chirish</span>
                     </>
                   )}
                 </Button>
@@ -191,7 +215,7 @@ export default function TournamentPage() {
                   ) : (
                     <>
                        <Play size={16} />
-                        Boshlash
+                        <span className="max-sm:hidden">Boshlash</span>
                     </>
                   )}
                 </Button>
@@ -202,7 +226,7 @@ export default function TournamentPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 max-sm:px-1 sm:px-6 lg:px-8 py-8">
         {/* Tournament Info */}
         {loading ? (
               <Card className="rounded-2xl p-6 animate-pulse mb-4 border shadow-sm grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 items-center">
@@ -212,16 +236,16 @@ export default function TournamentPage() {
                 <div className="h-4 bg-gray-200 rounded p-8" />
               </Card>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 max-sm:grid-cols-1 md:grid-cols-4 sm:gap-4 gap-1 mb-8">
             <Card className="p-4">
               <p className="text-xs text-muted-foreground mb-1">Ishtirokchilar</p>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="sm:text-2xl text-lg font-bold text-foreground">
                 {tournament?.players.length || 0}/16
               </p>
             </Card>
             <Card className="p-4">
               <p className="text-xs text-muted-foreground mb-1">Format</p>
-              <p className="text-2xl font-bold text-foreground text-balance">{tournament?.title || "Nomsiz"}</p>
+              <p className="sm:text-2xl text-lg font-bold text-foreground text-balance">{tournament?.title || "Nomsiz"}</p>
             </Card>
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-1">
@@ -289,18 +313,58 @@ export default function TournamentPage() {
             )}
 
             {/* Participants */}
-            <Card className="p-6">
-              <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+            <Card className="sm:p-6 p-2">
+              <h3 className="font-bold text-foreground max-sm:text-xs p-2 mb-3 flex items-center gap-2">
                 <Users className="w-4 h-4" />
                 Ishtirokchilar va ularning o'rinlari!
               </h3>
               <div className="space-y-2">
-                {Object.entries(winsByEmail).sort((a, b) => a[1] - b[1]).reverse().map(([email, count], i) => (
-                  <div key={i} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-sm">
-                    <span className="font-medium text-foreground">{email}</span>
-                    <span className="text-xs text-muted-foreground">#{i + 1}</span>
-                  </div>
-                ))}
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-muted-foreground">
+                  <tr>
+                    <th className="py-3 px-4 text-left font-medium">O‘yinchi</th>
+                    <th className="py-3 px-4 text-left font-medium">G‘alabalar</th>
+                    <th className="py-3 px-4 text-left font-medium">Reyting</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {Object.entries(winsByEmail)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([email, count], i) => {
+                      const rank = i + 1
+
+                      const rankColor =
+                        rank === 1
+                          ? "text-yellow-500 font-bold"
+                          : rank === 2
+                          ? "text-gray-400 font-semibold"
+                          : rank === 3
+                          ? "text-amber-700 font-semibold"
+                          : "text-muted-foreground"
+
+                      return (
+                        <tr
+                          key={i}
+                          className="border-t border-border hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="py-3 sm:px-4 px-2 font-medium text-foreground">
+                            <span className="max-sm:hidden">{email}</span>
+                            <span className="sm:hidden capitalize">{email.split("@")[0]}</span>
+                          </td>
+
+                          <td className="py-3 sm:px-4 px-2 text-center">{count}</td>
+
+                          <td className="py-3 sm:px-4 px-2 text-center">
+                            <span className={`text-sm ${rankColor}`}>
+                              #{rank}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                </tbody>
+              </table>
               </div>
             </Card>
           </div>

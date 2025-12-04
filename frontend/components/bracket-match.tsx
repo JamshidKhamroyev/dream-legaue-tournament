@@ -22,7 +22,7 @@ export default function BracketMatch({
     <div
       onClick={() => onSelectMatch?.(match)}
       className={`
-        rounded-xl border bg-card shadow-sm p-4 cursor-pointer select-none
+        sm:rounded-xl rounded-sm border bg-card shadow-sm sm:p-4 p-2 cursor-pointer select-none
         transition-all duration-200
         ${isSelected ? "border-primary shadow-md bg-primary/5" : "hover:bg-muted/40"}
       `}
@@ -31,7 +31,7 @@ export default function BracketMatch({
         {/* PLAYER 1 */}
         <div
           className={`
-            flex items-center justify-between rounded-lg px-3 py-2 text-sm transition
+            flex items-center justify-between sm:rounded-lg rounded-sm sm:px-3 px-1 sm:py-2 py-2 text-sm transition
             ${match.player1
               ? winner?._id === match.player1._id
                 ? "bg-primary/20 text-primary font-semibold"
@@ -50,7 +50,7 @@ export default function BracketMatch({
         {/* PLAYER 2 */}
         <div
           className={`
-            flex items-center justify-between rounded-lg px-3 py-2 text-sm transition
+            flex items-center justify-between sm:rounded-lg rounded-sm px-3 py-2 text-sm transition
             ${match.player2
               ? winner?._id === match.player2._id
                 ? "bg-primary/20 text-primary font-semibold"
