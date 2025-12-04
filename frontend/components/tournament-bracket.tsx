@@ -3,7 +3,7 @@
 import { ITournament, IUser, Match } from "@/types/types"
 import BracketMatch from "./bracket-match"
 import MatchWinnerModal from "./modals/check-modal"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { axiosClient } from "@/lib/axios"
 import { useRouter } from "next/navigation"
 import useAuth from "@/hooks/use-auth"
@@ -27,10 +27,9 @@ export function TournamentBracket({
 }: TournamentBracketProps) {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [grouped, setGrouped] = useState<Match[][]>(groupByRound(matches))
   const { user, socket } = useAuth()
   const router = useRouter()
-
-  const grouped = matches ? groupByRound(matches) : []
 
   const handleSelectMatch = (match: Match) => {
     if(creator === user?._id && !match.winner && (match.player1 || match.player2)){
@@ -42,6 +41,7 @@ export function TournamentBracket({
 
   const handleSubmitWinner = async (matchId: string, winnerId: string) => {
     try {
+      socket?.emit("giveLoader", true)
       const { data } = await axiosClient.put<{ tournament?: ITournament, newMatch?: Match, match?: Match }>(`/api/tournament/change-round/${matchId}`, { winnerId })
       router.refresh()
       if(data.tournament){
@@ -51,23 +51,46 @@ export function TournamentBracket({
       if(data.newMatch){
         const newData = matches.map(match => {
           if(match._id === data.match?._id){
-            return data.match
+            return match = data.match
           }
           if(match._id === data.newMatch?._id){
-            return data.newMatch
+            return match = data.newMatch
           }
           return match
         })
         setMatches(newData)
+        setGrouped(groupByRound(newData))
+        socket?.emit("changeMatch", { matches: newData })
       }
+      const newData = matches.map(match => {
+        if (match._id === data.match?._id){
+          return data.match
+        }
+
+        return match
+      })
+      
+      setGrouped(groupByRound(newData))
+      socket?.emit("changeMatch", { matches: newData })
       setIsModalOpen(false)
       setSelectedMatch(null)
     } catch (error) {
       console.error("Error updating winner:", error)
       throw error
+    } finally {
+      socket?.emit("giveLoader", false)
     }
   }
 
+  useEffect(() => {
+    socket?.on("getChangedmatch", (matches: Match[]) => {
+      setGrouped(groupByRound(matches))
+    })
+  },[socket, user])
+
+  useEffect(() => {
+    setGrouped(groupByRound(matches))
+  },[matches])
   const BracketSkeleton = () => (
     <div className="flex flex-col gap-6 min-w-[230px]">
       <div className="h-6 bg-gray-300 rounded w-1/2 mb-4 animate-pulse"></div>

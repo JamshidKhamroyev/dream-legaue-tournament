@@ -50,6 +50,10 @@ io.on("connection", (socket) => {
         io.emit("getNewStatus", { id, status })
     })
 
+    socket.on("changeMatch", ({ matches }) => {
+        io.emit("getChangedmatch", matches)
+    })
+
     socket.on("deleteTournament", tournament => {
         io.emit("getDeletedTournament", tournament)
     })

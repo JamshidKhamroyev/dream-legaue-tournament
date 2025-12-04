@@ -275,17 +275,8 @@ export default function TournamentsPage() {
                             onClick={(e) => onDeleteHandler(tournament._id)}
                             className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r cursor-pointer hover:bg-gradient-to-l duration-300 from-red-500 to-rose-600 text-white shadow hover:shadow-lg hover:text-white"
                           >
-                            {deleteLoad === tournament._id ? (
-                              <div className="flex items-center justify-center gap-x-2">
-                                <span>O'chirilmoqda...</span>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              </div>
-                            ) : (
-                              <>
-                                <Trash2 size={16} />
-                                O'chirish
-                              </>
-                            )}
+                            <Trash2 size={16} />
+                            O'chirish
                           </Button>
                         )}
 

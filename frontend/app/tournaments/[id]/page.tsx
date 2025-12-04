@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Trophy, Users, Calendar, MapPin, ArrowLeft, Edit, Loader2, Play } from "lucide-react"
+import { Trophy, Users, Calendar, MapPin, ArrowLeft, Edit, Loader2, Play, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { TournamentBracket } from "@/components/tournament-bracket"
@@ -25,16 +25,24 @@ export default function TournamentPage() {
   const [winsByEmail, setWinsByEmail] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState<boolean>(true)
   const [global, setGlobal] = useState<boolean>(false)
+  const [startDate, setStartDate] = useState<string>("")
+  const [timeLeft, setTimeLeft] = useState(new Date(startDate).getTime() - Date.now());
 
   const [selectedMatchId, setSelectedMatchId] = useState<string | undefined>(undefined)
 
   const selectedMatch = matchs.flat().find((m) => m._id === selectedMatchId)
+  const totalSeconds = Math.floor(timeLeft / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
   const getMatchs = async () => {
     const wins: Record<string, number> = {}
     try {
       const { data } = await axiosClient.get<{ matches: Match[], tournament: ITournament }>(`/api/tournament/get/${tournamentId}`)      
       setTournament(data.tournament)
+      setStartDate(data.tournament.time)
       setMatches(data.matches)
 
       for (const user of data.tournament.players) {
@@ -67,6 +75,7 @@ export default function TournamentPage() {
         return { ...prev, status: "started" };
       })
       setMatches(data.matches)
+      socket?.emit("changeMatch", data.matches)
     } catch (error) {
       console.log(error);
     } finally {
@@ -93,10 +102,17 @@ export default function TournamentPage() {
   },[tournamentId])
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft(new Date(startDate).getTime() - Date.now());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [startDate]);
+
+  useEffect(() => {
     socket?.on("showLoader", (load: boolean) => {
       setGlobal(load)
     })
-
     
     socket?.on("getNewStatus", ({ id, status }: { id: string, status: string }) => {
       setTournament(prev => {
@@ -212,9 +228,15 @@ export default function TournamentPage() {
                 <Calendar className="w-3 h-3 text-muted-foreground" />
                 <p className="text-xs text-muted-foreground">Boshlanish vaqti</p>
               </div>
-                {tournament?.createdAt ? (
-                  <p className="text-xl font-bold text-foreground text-balance">{format(new Date(tournament?.createdAt!), "dd/MM/Y")}</p>
-                ) : <p className="text-xl font-bold text-foreground text-balance">Sana mavjud emas</p>}
+                {tournament?.status !== "finished" && timeLeft >= 0 ? (
+                   <p className="text-xl font-bold text-foreground text-balance">
+                   {days > 0 && `${days} kun `}
+             
+                   {hours.toString().padStart(2, "0")}:
+                   {minutes.toString().padStart(2, "0")}:
+                   {seconds.toString().padStart(2, "0")}
+                 </p>
+                ) : <p className="text-xl font-semibold text-green-600 flex gap-x-1"><span>Vaqt bo'ldi</span> <Clock /></p>}
             </Card>
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-1">
