@@ -44,7 +44,7 @@ const login = async (req, res) => {
             return res.status(400).json({ message: "Password is incorrect!"})
         } 
         const token = jwt.sign({ userId: existUser._id }, process.env.JWT_SECRET_KEY)
-        res.cookie("token", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 1000 * 60 * 60 * 24 * 7, path: '/' }).json({ user: existUser })
+        return res.cookie("token", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "none", maxAge: 1000 * 60 * 60 * 24 * 7, path: '/' }).json({ user: existUser })
     } catch (error) {
         res.status(500).json(error)
     }
