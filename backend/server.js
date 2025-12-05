@@ -6,12 +6,12 @@ const { Server } = require("socket.io");
 const cors = require('cors')
 
 const app = express()
-app.use(cors({ credentials: true, origin: ["http://localhost:3000"] }))
+app.use(cors({ credentials: true, origin: ["https://dream-legaue-tournament.vercel.app"] }))
 app.use(express.json())
 app.use(cookieParser())
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "http://localhost:3000", methods: ["GET", "POST"] }})
+const io = new Server(server, { cors: { origin: "https://dream-legaue-tournament.vercel.app", methods: ["GET", "POST"] }})
 
 let users = []
 
