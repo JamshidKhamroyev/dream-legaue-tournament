@@ -11,6 +11,7 @@ import { axiosClient } from "@/lib/axios"
 import { format } from 'date-fns';
 import useAuth from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
+import { toast } from "react-toast"
 
 export default function TournamentsPage() {
   const { user, socket } = useAuth()
@@ -39,6 +40,7 @@ export default function TournamentsPage() {
       const { data } = await axiosClient.delete<{ tourner: ITournament}>(`/api/tournament/delete/${id}`)      
       setTournaments(prev => prev.filter(item => item._id !== data.tourner._id))
       socket?.emit("deleteTournament", { tournament: data.tourner})
+      toast.success(`${data.tourner.title} muvaffaqiyatli o'chirildi!`)
     } catch (error) {
       console.log(error);
     } finally {
@@ -62,6 +64,7 @@ export default function TournamentsPage() {
         })
       )
       socket?.emit("addNewParticipant", { tournament: data.updateTourner})
+      toast.success(`Siz ${data.updateTourner.title}ga muvaffaqiyatli qo'shildingiz!`)
     } catch (error) {
       console.log(error);
     } finally {
@@ -78,6 +81,7 @@ export default function TournamentsPage() {
         return { ...item, status: "started" }
       }))
       socket?.emit("changeStatus", { id, status: "started" })
+      toast.success(`Turniringizni boshlaganingiz bilan Tabriklaymiz!`)
     } catch (error) {
       console.log(error);
     } finally {

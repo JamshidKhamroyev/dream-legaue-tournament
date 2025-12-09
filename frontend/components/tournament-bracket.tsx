@@ -7,9 +7,10 @@ import { useEffect, useState } from "react"
 import { axiosClient } from "@/lib/axios"
 import { useRouter } from "next/navigation"
 import useAuth from "@/hooks/use-auth"
-import { Loader2 } from "lucide-react"
 import MatchGeneratorLoader from "./ui/global-loader"
+import { useSound } from "use-sound"
 import WinnerDeterminationLoader from "./ui/round-loader"
+import { toast } from "react-toast"
 
 interface TournamentBracketProps {
   matches: Match[]
@@ -20,7 +21,7 @@ interface TournamentBracketProps {
 }
 
 export function TournamentBracket({
-  matches,
+  matches: currentMatches,
   setSelect,
   global,
   setMatches,
@@ -28,8 +29,9 @@ export function TournamentBracket({
 }: TournamentBracketProps) {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [grouped, setGrouped] = useState<Match[][]>(groupByRound(matches))
+  const [grouped, setGrouped] = useState<Match[][]>(groupByRound(currentMatches))
   const { user, socket } = useAuth()
+  const [playWinSound] = useSound("/win.wav")
   const router = useRouter()
 
   const handleSelectMatch = (match: Match) => {
@@ -50,7 +52,7 @@ export function TournamentBracket({
       }
 
       if(data.newMatch){
-        const newData = matches.map(match => {
+        const newData = currentMatches.map(match => {
           if(match._id === data.match?._id){
             return match = data.match
           }
@@ -63,7 +65,7 @@ export function TournamentBracket({
         setGrouped(groupByRound(newData))
         socket?.emit("changeMatch", { matches: newData })
       }
-      const newData = matches.map(match => {
+      const newData = currentMatches.map(match => {
         if (match._id === data.match?._id){
           return data.match
         }
@@ -85,13 +87,26 @@ export function TournamentBracket({
 
   useEffect(() => {
     socket?.on("getChangedmatch", (matches: Match[]) => {
+      matches.forEach(newMatch => {
+        const oldMatch = currentMatches.find(m => m._id === newMatch._id);
+        if (!oldMatch) return;
+        if (oldMatch.winner?._id !== newMatch.winner?._id) {
+          if (newMatch.winner && newMatch.player1 && newMatch.player2) {
+            toast.success(`${newMatch.player1.email} va ${newMatch.player2.email} o‘yinida ${newMatch.winner.email} g‘olib bo‘ldi!`);
+            playWinSound();
+          }
+        }
+      });
+
+      setMatches(matches)
       setGrouped(groupByRound(matches))
     })
   },[socket, user])
 
   useEffect(() => {
-    setGrouped(groupByRound(matches))
-  },[matches])
+    setGrouped(groupByRound(currentMatches))
+  },[currentMatches])
+
   const BracketSkeleton = () => (
     <div className="flex flex-col gap-6 min-w-[230px]">
       <div className="h-6 bg-gray-300 rounded w-1/2 mb-4 animate-pulse"></div>
@@ -110,7 +125,7 @@ export function TournamentBracket({
           <MatchGeneratorLoader />
         ) : global === "" ? (
           <div className="flex sm:gap-16 gap-7 min-w-min sm:p-6 p-2 bg-muted/20 rounded-lg transition-all">
-            {matches && matches.length > 0 ? (
+            {currentMatches && currentMatches.length > 0 ? (
               grouped.map((roundMatches, roundIndex) => {
                 const isFinal = roundIndex === grouped.length - 1
                 return (

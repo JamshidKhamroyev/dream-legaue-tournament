@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { FC, useEffect, useState } from "react"
 import Loader from "../ui/loader"
 import { io } from "socket.io-client";
-
+import { ToastContainer } from 'react-toast'
 
 const AuthProvider: FC<ChildProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(false)
@@ -34,11 +34,15 @@ const AuthProvider: FC<ChildProps> = ({ children }) => {
   
   useEffect(() => {
     connect(io('https://dream-legaue-tournament.onrender.com'))
+    // connect(io('http://localhost:4000'))
   },[])
 
   if (loading) return <Loader />
   return (
-    <div>{children}</div>
+    <div>
+      {children}
+      <ToastContainer delay={5000} />
+    </div>
   )
 }
 

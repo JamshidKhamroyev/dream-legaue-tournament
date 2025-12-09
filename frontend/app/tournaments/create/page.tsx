@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { axiosClient } from "@/lib/axios"
 import { ITournament } from "@/types/types"
 import useAuth from "@/hooks/use-auth"
+import { toast } from "react-toast"
 
 export default function CreateTournamentPage() {
   const router = useRouter()
@@ -31,6 +32,7 @@ export default function CreateTournamentPage() {
     try {
       const { data } = await axiosClient.post<{ tourner: ITournament }>(`/api/tournament/create`, formData)  
       socket?.emit("addNewTournament", { tournament: data.tourner })
+      toast.success(`${data.tourner.title} muvaffaqiyatli yaratilindi!`)
       router.push("/tournaments")
     } catch (error) {
       console.log(error);

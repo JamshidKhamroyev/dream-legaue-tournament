@@ -298,13 +298,13 @@ export default function TournamentPage() {
                   <div className="space-y-3">
                     <div className="p-3 bg-background rounded-lg border border-border">
                       <p className="text-xs text-muted-foreground mb-1">1-O'yinchi</p>
-                      <p className="font-semibold text-foreground">{selectedMatch.player1?.email ? selectedMatch.player1?.email : `Bot-${(Math.random() * 100000000).toFixed(0)}` }</p>
+                      <p className="font-semibold text-foreground">{selectedMatch.player1?.email ? selectedMatch.player1?.email : `Bot-${(324324324324.34242342).toFixed(0)}` }</p>
                       <p className="text-sm text-primary font-bold mt-1">Score: {winsByEmail[selectedMatch.player1?.email!] || 0} g'alaba</p>
                     </div>
 
                     <div className="p-3 bg-background rounded-lg border border-border">
                       <p className="text-xs text-muted-foreground mb-1">2-O'yinchi</p>
-                      <p className="font-semibold text-foreground">{selectedMatch.player2?.email ? selectedMatch.player2?.email : `Bot-${(Math.random() * 100000000).toFixed(0)}` }</p>
+                      <p className="font-semibold text-foreground">{selectedMatch.player2?.email ? selectedMatch.player2?.email : `Bot-${(324324324324.34242342).toFixed(0)}` }</p>
                       <p className="text-sm font-bold mt-1">Score: {winsByEmail[selectedMatch.player2?.email!] || 0} g'alaba</p>
                     </div>
                   </div>
